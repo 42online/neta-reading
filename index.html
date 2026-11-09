@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>קריאה בהבזק – המשחק של נטע</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&family=Noto+Sans+Hebrew:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F7FB; --sheet:#FFFFFF; --ink:#1D2B53; --ink-soft:#5A6788;
+  --line:#C9DAEE; --margin:#E4572E; --marker:#FFD23F; --good:#2BA84A; --bad:#E4572E;
+  --btn:#1D2B53; --btn-ink:#FFFFFF; --chip:#E6EEF8;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121A2E; --sheet:#1B2540; --ink:#EEF2FA; --ink-soft:#A6B2CF;
+    --line:#2C3A5E; --margin:#FF7A55; --marker:#FFD23F; --good:#4CCB6B; --bad:#FF7A55;
+    --btn:#FFD23F; --btn-ink:#1D2B53; --chip:#26324F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121A2E; --sheet:#1B2540; --ink:#EEF2FA; --ink-soft:#A6B2CF;
+  --line:#2C3A5E; --margin:#FF7A55; --marker:#FFD23F; --good:#4CCB6B; --bad:#FF7A55;
+  --btn:#FFD23F; --btn-ink:#1D2B53; --chip:#26324F; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Varela Round","Arial Hebrew",Arial,sans-serif;font-size:18px;line-height:1.5}
+main{max-width:760px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:clamp(26px,6vw,36px);margin:0;font-weight:400}
+h1 span{background:linear-gradient(transparent 55%,var(--marker) 55%);padding:0 4px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{background:var(--chip);border-radius:999px;padding:4px 12px;font-size:15px;color:var(--ink-soft)}
+.stat b{color:var(--ink);font-weight:400}
+
+/* the notebook page */
+.page{position:relative;background:var(--sheet);border-radius:6px 18px 18px 6px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 43px,var(--line) 43px 44px);
+  box-shadow:0 2px 0 var(--line),0 10px 30px rgba(29,43,83,.08);
+  min-height:330px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 56px 28px 24px;overflow:hidden}
+.page::before{content:"";position:absolute;top:0;bottom:0;right:40px;width:2px;background:var(--margin);opacity:.7}
+.word{font-family:"Noto Sans Hebrew","Arial Hebrew",Arial,sans-serif;font-weight:700;font-size:clamp(56px,15vw,120px);line-height:1.6;text-align:center;min-height:1.6em;letter-spacing:.01em;word-break:keep-all}
+.word.hint{color:var(--ink-soft);font-size:clamp(40px,10vw,72px);font-weight:500}
+.word.sentence{font-size:clamp(30px,7.5vw,62px);line-height:1.8;word-break:normal;max-width:100%}
+.word.hint.sentence{font-size:clamp(26px,6vw,48px)}
+.msg{font-size:clamp(20px,4.5vw,26px);text-align:center;color:var(--ink-soft)}
+.dot{width:22px;height:22px;border-radius:50%;background:var(--margin);animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{to{transform:scale(1.35)}}
+.timer{position:absolute;bottom:0;right:0;height:8px;background:var(--marker);width:100%;transform-origin:right}
+.big-q{font-size:clamp(64px,16vw,120px);color:var(--line);line-height:1.4}
+
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+button{font:inherit;border:0;border-radius:14px;padding:14px 22px;cursor:pointer;background:var(--chip);color:var(--ink);font-size:19px;min-height:52px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--margin);outline-offset:2px}
+button.primary{background:var(--btn);color:var(--btn-ink);font-size:22px;padding:16px 34px}
+button.good{background:var(--good);color:#fff}
+button.bad{background:var(--bad);color:#fff}
+button[hidden]{display:none}
+
+details{margin-top:26px;background:var(--sheet);border-radius:14px;padding:4px 18px;border:2px solid var(--line)}
+summary{cursor:pointer;padding:12px 0;font-size:19px}
+.settings{display:grid;gap:20px;padding:6px 0 18px}
+.row label.title{display:block;margin-bottom:8px}
+.seg{display:inline-flex;background:var(--chip);border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{padding:8px 16px;border-radius:9px;cursor:pointer}
+.seg input:checked+label{background:var(--btn);color:var(--btn-ink)}
+.seg input:focus-visible+label{outline:3px solid var(--margin)}
+.slider{display:flex;align-items:center;gap:14px}
+input[type=range]{flex:1;accent-color:var(--margin);height:32px}
+.secs{min-width:84px;text-align:center;background:var(--marker);color:#1D2B53;border-radius:10px;padding:4px 8px}
+.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input{width:22px;height:22px;accent-color:var(--margin);margin-top:3px;flex:none}
+.note{color:var(--ink-soft);font-size:15px}
+
+.summary-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;max-width:100%}
+.summary-list span{font-family:"Noto Sans Hebrew",Arial,sans-serif;padding:4px 12px;border-radius:999px;font-size:20px}
+.summary-list .ok{background:color-mix(in srgb,var(--good) 20%,transparent)}
+.summary-list .no{background:color-mix(in srgb,var(--bad) 20%,transparent)}
+@media (prefers-reduced-motion: reduce){.dot{animation:none}}
+@media (max-width:480px){.page{padding:22px 46px 22px 14px;min-height:280px}.page::before{right:30px}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1><span>קריאה בהבזק</span></h1>
+    <div class="stats" aria-live="polite">
+      <div class="stat"><span id="sLabel">מילה</span> <b id="sRound">0</b>/<b id="sTotal">10</b></div>
+      <div class="stat">נכון <b id="sGood">0</b></div>
+      <div class="stat">רצף <b id="sStreak">0</b></div>
+    </div>
+  </header>
+
+  <section class="page" id="page" aria-live="assertive">
+    <div class="msg" id="stage">נטע, מוכנה? המילה תופיע לרגע קצר – תקראי אותה בקול לפני שהיא נעלמת!</div>
+  </section>
+
+  <div class="actions">
+    <button class="primary" id="startBtn">מתחילים</button>
+    <button class="good" id="goodBtn" hidden>קראה נכון ✓</button>
+    <button class="bad" id="badBtn" hidden>לא הספיקה ✗</button>
+    <button id="peekBtn" hidden>הצג שוב</button>
+  </div>
+
+  <details id="settingsBox" open>
+    <summary>הגדרות להורה</summary>
+    <div class="settings">
+      <div class="row">
+        <label class="title">מה קוראים</label>
+        <div class="seg" role="radiogroup">
+          <input type="radio" name="mode" id="m1" value="words" checked><label for="m1">מילים</label>
+          <input type="radio" name="mode" id="m2" value="s3"><label for="m2">משפטים של 3 מילים</label>
+          <input type="radio" name="mode" id="m3" value="s5"><label for="m3">משפטים של 5 מילים</label>
+        </div>
+      </div>
+      <div class="row">
+        <label class="title">ניקוד</label>
+        <div class="seg" role="radiogroup">
+          <input type="radio" name="nikud" id="n1" value="with" checked><label for="n1">עם ניקוד</label>
+          <input type="radio" name="nikud" id="n2" value="without"><label for="n2">בלי ניקוד</label>
+          <input type="radio" name="nikud" id="n3" value="mix"><label for="n3">מעורב</label>
+        </div>
+      </div>
+      <div class="row">
+        <label class="title" for="dur">כמה זמן המילה מופיעה</label>
+        <div class="slider">
+          <input type="range" id="dur" min="0.3" max="10" step="0.1" value="3">
+          <div class="secs" id="durOut">3.0 שנ׳</div>
+        </div>
+      </div>
+      <div class="row" id="lvlRow">
+        <label class="title">רמת המילים</label>
+        <div class="seg" role="radiogroup">
+          <input type="radio" name="lvl" id="l1" value="easy"><label for="l1">קצרות</label>
+          <input type="radio" name="lvl" id="l2" value="mid"><label for="l2">בינוניות</label>
+          <input type="radio" name="lvl" id="l3" value="hard"><label for="l3">ארוכות</label>
+          <input type="radio" name="lvl" id="l4" value="all" checked><label for="l4">הכול</label>
+        </div>
+      </div>
+      <div class="row">
+        <label class="title">כמה בכל סבב</label>
+        <div class="seg" role="radiogroup">
+          <input type="radio" name="cnt" id="c1" value="5"><label for="c1">5</label>
+          <input type="radio" name="cnt" id="c2" value="10" checked><label for="c2">10</label>
+          <input type="radio" name="cnt" id="c3" value="20"><label for="c3">20</label>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="speedup">
+        <span>אתגר: אחרי כל קריאה נכונה הזמן מתקצר קצת (עד 0.3 שנ׳)<br><span class="note">הזמן חוזר להגדרה בתחילת כל סבב.</span></span>
+      </label>
+    </div>
+  </details>
+</main>
+
+<script>
+// [בלי ניקוד, עם ניקוד]
+const WORDS = {
+ easy:[
+  ["בית","בַּיִת"],["ילד","יֶלֶד"],["ספר","סֵפֶר"],["כלב","כֶּלֶב"],["מים","מַיִם"],["לחם","לֶחֶם"],
+  ["שמש","שֶׁמֶשׁ"],["ירח","יָרֵחַ"],["פרח","פֶּרַח"],["עץ","עֵץ"],["גן","גַּן"],["ים","יָם"],["דג","דָּג"],
+  ["אבא","אַבָּא"],["אימא","אִמָּא"],["תיק","תִּיק"],["דלת","דֶּלֶת"],["גשם","גֶּשֶׁם"],["ענן","עָנָן"],
+  ["רוח","רוּחַ"],["שלג","שֶׁלֶג"],["חורף","חֹרֶף"],["קיץ","קַיִץ"],["בוקר","בֹּקֶר"],["ערב","עֶרֶב"],
+  ["יפה","יָפֶה"],["קטן","קָטָן"],["גדול","גָּדוֹל"],["חזק","חָזָק"],["שמח","שָׂמֵחַ"],["רץ","רָץ"],
+  ["תות","תּוּת"],["חדר","חֶדֶר"],["מיטה","מִטָּה"],["כובע","כּוֹבַע"],["מעיל","מְעִיל"],["פיל","פִּיל"],
+  ["קוף","קוֹף"],["סוס","סוּס"],["צב","צָב"],["שיר","שִׁיר"],["חבר","חָבֵר"],["כיסא","כִּסֵּא"],["אוכל","אוֹכֵל"],
+  ["אח","אָח"],["אחות","אָחוֹת"],["יד","יָד"],["רגל","רֶגֶל"],["עין","עַיִן"],["אף","אַף"],["פה","פֶּה"],
+  ["ראש","רֹאשׁ"],["לב","לֵב"],["חלב","חָלָב"],["ביצה","בֵּיצָה"],["דבש","דְּבַשׁ"],["מלח","מֶלַח"],["אור","אוֹר"],
+  ["חושך","חֹשֶׁךְ"],["הר","הַר"],["שדה","שָׂדֶה"],["נהר","נָהָר"],["אבן","אֶבֶן"],["חול","חוֹל"],["שעון","שָׁעוֹן"],
+  ["כוס","כּוֹס"],["סיר","סִיר"],["דוב","דֹּב"],["זאב","זְאֵב"],["גמל","גָּמָל"],["נמר","נָמֵר"],["חם","חַם"],
+  ["קר","קַר"],["טוב","טוֹב"],["שקט","שֶׁקֶט"],["שחור","שָׁחֹר"],["לבן","לָבָן"],["אדום","אָדֹם"],["כחול","כָּחֹל"]
+ ],
+ mid:[
+  ["ילדה","יַלְדָּה"],["חתול","חָתוּל"],["שולחן","שֻׁלְחָן"],["תפוח","תַּפּוּחַ"],["כוכב","כּוֹכָב"],["ציפור","צִפּוֹר"],
+  ["סבא","סַבָּא"],["סבתא","סָבְתָא"],["חברה","חֲבֵרָה"],["כיתה","כִּתָּה"],["מורה","מוֹרָה"],["עיפרון","עִפָּרוֹן"],
+  ["כדור","כַּדּוּר"],["משחק","מִשְׂחָק"],["חלון","חַלּוֹן"],["רחוב","רְחוֹב"],["אביב","אָבִיב"],["סתיו","סְתָיו"],
+  ["עצוב","עָצוּב"],["מהיר","מָהִיר"],["איטי","אִטִּי"],["קורא","קוֹרֵא"],["שותה","שׁוֹתָה"],["עוגה","עוּגָה"],
+  ["בננה","בָּנָנָה"],["מטבח","מִטְבָּח"],["שמיכה","שְׂמִיכָה"],["נמלה","נְמָלָה"],["אריה","אַרְיֵה"],["פרה","פָּרָה"],
+  ["ארנב","אַרְנָב"],["מתנה","מַתָּנָה"],["מסיבה","מְסִבָּה"],["חופשה","חֻפְשָׁה"],["טיול","טִיּוּל"],["סיפור","סִפּוּר"],
+  ["תמונה","תְּמוּנָה"],["מחשב","מַחְשֵׁב"],["טלפון","טֶלֶפוֹן"],["נעליים","נַעֲלַיִם"],["פרפר","פַּרְפַּר"],
+  ["גלידה","גְּלִידָה"],["מכונית","מְכוֹנִית"],["מטוס","מָטוֹס"],["רכבת","רַכֶּבֶת"],["מזלג","מַזְלֵג"],["מקרר","מְקָרֵר"],
+  ["צלחת","צַלַּחַת"],["עכבר","עַכְבָּר"],["גבינה","גְּבִינָה"],["ירקות","יְרָקוֹת"],["פירות","פֵּרוֹת"],["תפוז","תַּפּוּז"],
+  ["אגס","אַגָּס"],["ענבים","עֲנָבִים"],["לימון","לִימוֹן"],["עוגייה","עוּגִיָּה"],["ארוחה","אֲרוּחָה"],["שוטר","שׁוֹטֵר"],
+  ["רופא","רוֹפֵא"],["כבאי","כַּבַּאי"],["שכן","שָׁכֵן"],["מכתב","מִכְתָּב"],["מילה","מִלָּה"],["משפט","מִשְׁפָּט"],
+  ["שאלה","שְׁאֵלָה"],["תשובה","תְּשׁוּבָה"],["חשבון","חֶשְׁבּוֹן"],["סרגל","סַרְגֵּל"],["צבעים","צְבָעִים"],["ירוק","יָרֹק"],
+  ["צהוב","צָהֹב"],["שמיים","שָׁמַיִם"],["בריכה","בְּרֵכָה"],["מגדל","מִגְדָּל"],["שכונה","שְׁכוּנָה"],["חנות","חֲנוּת"],
+  ["כביש","כְּבִישׁ"],["רמזור","רַמְזוֹר"],["סירה","סִירָה"],["דבורה","דְּבוֹרָה"],["תנין","תַּנִּין"],["ינשוף","יַנְשׁוּף"],
+  ["שמחה","שִׂמְחָה"],["חלום","חֲלוֹם"],["בובה","בֻּבָּה"],["כרית","כָּרִית"]
+ ],
+ hard:[
+  ["מחברת","מַחְבֶּרֶת"],["אופניים","אוֹפַנַּיִם"],["אוטובוס","אוֹטוֹבּוּס"],["כותבת","כּוֹתֶבֶת"],["קופצת","קוֹפֶצֶת"],
+  ["משחק","מְשַׂחֵק"],["מציירת","מְצַיֶּרֶת"],["שיעורים","שִׁעוּרִים"],["הפסקה","הַפְסָקָה"],["ספרייה","סִפְרִיָּה"],
+  ["שוקולד","שׁוֹקוֹלָד"],["אבטיח","אֲבַטִּיחַ"],["תרנגול","תַּרְנְגוֹל"],["מוזיקה","מוּזִיקָה"],["מספריים","מִסְפָּרַיִם"],
+  ["טלוויזיה","טֶלֶוִיזְיָה"],["הפתעה","הַפְתָּעָה"],["משפחה","מִשְׁפָּחָה"],["מכנסיים","מִכְנָסַיִם"],["תלמידים","תַּלְמִידִים"],
+  ["עגבנייה","עַגְבָנִיָּה"],["מלפפון","מְלָפְפוֹן"],["נדנדה","נַדְנֵדָה"],["מגלשה","מַגְלֵשָׁה"],["מדברת","מְדַבֶּרֶת"],
+  ["התלבשתי","הִתְלַבַּשְׁתִּי"],
+  ["צפרדע","צְפַרְדֵּעַ"],["מנהלת","מְנַהֶלֶת"],["מטרייה","מִטְרִיָּה"],["מסעדה","מִסְעָדָה"],["אופנוע","אוֹפַנּוֹעַ"],
+  ["מברשת","מִבְרֶשֶׁת"],["משקפיים","מִשְׁקָפַיִם"],["מחשבה","מַחֲשָׁבָה"],["הרפתקה","הַרְפַּתְקָה"],["ירושלים","יְרוּשָׁלַיִם"],
+  ["שולחנות","שֻׁלְחָנוֹת"],["תפוחים","תַּפּוּחִים"],["כדורגל","כַּדּוּרֶגֶל"],["כדורסל","כַּדּוּרְסַל"],["רוקדת","רוֹקֶדֶת"],
+  ["מסתכל","מִסְתַּכֵּל"],["הלכנו","הָלַכְנוּ"],["שיחקנו","שִׂחַקְנוּ"],["אכלתי","אָכַלְתִּי"],["כתבתי","כָּתַבְתִּי"],
+  ["מתגלגל","מִתְגַּלְגֵּל"],["ממתקים","מַמְתַּקִּים"],["מחברות","מַחְבָּרוֹת"],["מכשפה","מְכַשֵּׁפָה"],["פרפרים","פַּרְפָּרִים"]
+ ]
+};
+
+// משפטים: [בלי ניקוד, עם ניקוד]
+const SENTENCES = {
+ s3:[
+  ["הכלב רץ מהר","הַכֶּלֶב רָץ מַהֵר"],["הילדה קוראת ספר","הַיַּלְדָּה קוֹרֵאת סֵפֶר"],["החתול שותה חלב","הֶחָתוּל שׁוֹתֶה חָלָב"],
+  ["אבא מבשל ארוחה","אַבָּא מְבַשֵּׁל אֲרוּחָה"],["אימא קונה לחם","אִמָּא קוֹנָה לֶחֶם"],["השמש זורחת בבוקר","הַשֶּׁמֶשׁ זוֹרַחַת בַּבֹּקֶר"],
+  ["הציפור שרה שיר","הַצִּפּוֹר שָׁרָה שִׁיר"],["יורד גשם חזק","יוֹרֵד גֶּשֶׁם חָזָק"],["אני אוהבת גלידה","אֲנִי אוֹהֶבֶת גְּלִידָה"],
+  ["הילד משחק בכדור","הַיֶּלֶד מְשַׂחֵק בְּכַדּוּר"],["המורה כותבת בלוח","הַמּוֹרָה כּוֹתֶבֶת בַּלּוּחַ"],["הפרח צומח בגינה","הַפֶּרַח צוֹמֵחַ בַּגִּנָּה"],
+  ["הדג שוחה בים","הַדָּג שׂוֹחֶה בַּיָּם"],["סבתא אופה עוגה","סָבְתָא אוֹפָה עוּגָה"],["אנחנו הולכים לים","אֲנַחְנוּ הוֹלְכִים לַיָּם"],
+  ["הירח מאיר בלילה","הַיָּרֵחַ מֵאִיר בַּלַּיְלָה"],["התינוק ישן בשקט","הַתִּינוֹק יָשֵׁן בְּשֶׁקֶט"],["הארנב אוכל גזר","הָאַרְנָב אוֹכֵל גֶּזֶר"],
+  ["האוטובוס הגיע מוקדם","הָאוֹטוֹבּוּס הִגִּיעַ מֻקְדָּם"],["הפיל שותה מים","הַפִּיל שׁוֹתֶה מַיִם"],["אני כותב מכתב","אֲנִי כּוֹתֵב מִכְתָּב"],
+  ["החלון פתוח לגמרי","הַחַלּוֹן פָּתוּחַ לְגַמְרֵי"],["הקוף אוכל בננה","הַקּוֹף אוֹכֵל בָּנָנָה"],["היום יום הולדת","הַיּוֹם יוֹם הֻלֶּדֶת"],
+  ["הכיתה שלנו גדולה","הַכִּתָּה שֶׁלָּנוּ גְּדוֹלָה"],["השלג לבן וקר","הַשֶּׁלֶג לָבָן וְקַר"],["התלמידים יוצאים להפסקה","הַתַּלְמִידִים יוֹצְאִים לַהַפְסָקָה"],
+  ["הפרפר עף גבוה","הַפַּרְפַּר עָף גָּבוֹהַּ"],["אחי בונה מגדל","אָחִי בּוֹנֶה מִגְדָּל"],["הצב הולך לאט","הַצָּב הוֹלֵךְ לְאַט"],
+  ["הילדים שרים יחד","הַיְּלָדִים שָׁרִים יַחַד"],["העץ גבוה מאוד","הָעֵץ גָּבוֹהַּ מְאֹד"],["אני שותה מיץ","אֲנִי שׁוֹתֶה מִיץ"],
+  ["הדוב ישן בחורף","הַדֹּב יָשֵׁן בַּחֹרֶף"],["הגלידה נמסה מהר","הַגְּלִידָה נָמַסָּה מַהֵר"],["סבא נותן נשיקה","סַבָּא נוֹתֵן נְשִׁיקָה"],
+  ["הכדור נפל למים","הַכַּדּוּר נָפַל לַמַּיִם"],["התפוח אדום ומתוק","הַתַּפּוּחַ אָדֹם וּמָתוֹק"],["אני מסדרת מיטה","אֲנִי מְסַדֶּרֶת מִטָּה"],
+  ["הסוס רץ בשדה","הַסּוּס רָץ בַּשָּׂדֶה"],["המכונית נוסעת לאט","הַמְּכוֹנִית נוֹסַעַת לְאַט"],["הרוח נושבת חזק","הָרוּחַ נוֹשֶׁבֶת חָזָק"],
+  ["אני אוהב פיצה","אֲנִי אוֹהֵב פִּיצָה"],["הנמלה סוחבת פירור","הַנְּמָלָה סוֹחֶבֶת פֵּרוּר"],["החבר שלי מצחיק","הֶחָבֵר שֶׁלִּי מַצְחִיק"],
+  ["אבא שוטף כלים","אַבָּא שׁוֹטֵף כֵּלִים"],["הילדה קופצת בחבל","הַיַּלְדָּה קוֹפֶצֶת בְּחֶבֶל"],["התינוק בוכה בלילה","הַתִּינוֹק בּוֹכֶה בַּלַּיְלָה"],
+  ["העוגה יצאה טעימה","הָעוּגָה יָצְאָה טְעִימָה"],["הים כחול ויפה","הַיָּם כָּחֹל וְיָפֶה"],["המורה מחלקת דפים","הַמּוֹרָה מְחַלֶּקֶת דַּפִּים"],
+  ["אנחנו אוכלים יחד","אֲנַחְנוּ אוֹכְלִים יַחַד"],["השעון מצלצל בבוקר","הַשָּׁעוֹן מְצַלְצֵל בַּבֹּקֶר"],["הפרה אוכלת עשב","הַפָּרָה אוֹכֶלֶת עֵשֶׂב"],
+  ["אני רוחץ ידיים","אֲנִי רוֹחֵץ יָדַיִם"],["הצפרדע קופצת גבוה","הַצְּפַרְדֵּעַ קוֹפֶצֶת גָּבוֹהַּ"],["הספר מונח בתיק","הַסֵּפֶר מֻנָּח בַּתִּיק"],
+  ["אימא שותה קפה","אִמָּא שׁוֹתָה קָפֶה"],["החתול תפס עכבר","הֶחָתוּל תָּפַס עַכְבָּר"],["הלימון חמוץ מאוד","הַלִּימוֹן חָמוּץ מְאֹד"]
+ ],
+ s5:[
+  ["הילדים משחקים בכדור בחצר","הַיְּלָדִים מְשַׂחֲקִים בְּכַדּוּר בֶּחָצֵר"],["אימא קנתה לי תפוחים בשוק","אִמָּא קָנְתָה לִי תַּפּוּחִים בַּשּׁוּק"],
+  ["הכלב שלנו אוהב לרוץ בגינה","הַכֶּלֶב שֶׁלָּנוּ אוֹהֵב לָרוּץ בַּגִּנָּה"],["בכל בוקר אני שותה חלב","בְּכָל בֹּקֶר אֲנִי שׁוֹתָה חָלָב"],
+  ["המורה קראה לנו סיפור מצחיק","הַמּוֹרָה קָרְאָה לָנוּ סִפּוּר מַצְחִיק"],["בחורף יורד הרבה גשם קר","בַּחֹרֶף יוֹרֵד הַרְבֵּה גֶּשֶׁם קַר"],
+  ["סבא וסבתא באו לבקר אותנו","סַבָּא וְסָבְתָא בָּאוּ לְבַקֵּר אוֹתָנוּ"],["הציפור בנתה קן על העץ","הַצִּפּוֹר בָּנְתָה קֵן עַל הָעֵץ"],
+  ["אני אוהבת לצייר עם צבעים","אֲנִי אוֹהֶבֶת לְצַיֵּר עִם צְבָעִים"],["בקיץ אנחנו שוחים בבריכה הגדולה","בַּקַּיִץ אֲנַחְנוּ שׂוֹחִים בַּבְּרֵכָה הַגְּדוֹלָה"],
+  ["החתול ישן על הכרית הרכה","הֶחָתוּל יָשֵׁן עַל הַכָּרִית הָרַכָּה"],["אבא קורא לי סיפור בלילה","אַבָּא קוֹרֵא לִי סִפּוּר בַּלַּיְלָה"],
+  ["היום השמש חמה ונעימה מאוד","הַיּוֹם הַשֶּׁמֶשׁ חַמָּה וּנְעִימָה מְאֹד"],["הילדה נתנה לחברה שלה מתנה","הַיַּלְדָּה נָתְנָה לַחֲבֵרָה שֶׁלָּהּ מַתָּנָה"],
+  ["מחר אנחנו נוסעים ברכבת לירושלים","מָחָר אֲנַחְנוּ נוֹסְעִים בְּרַכֶּבֶת לִירוּשָׁלַיִם"],["הדבורה הקטנה עפה אל הפרח","הַדְּבוֹרָה הַקְּטַנָּה עָפָה אֶל הַפֶּרַח"],
+  ["בהפסקה אכלתי כריך עם גבינה","בַּהַפְסָקָה אָכַלְתִּי כָּרִיךְ עִם גְּבִינָה"],["האח שלי בונה מגדל מקוביות","הָאָח שֶׁלִּי בּוֹנֶה מִגְדָּל מִקֻּבִּיּוֹת"],
+  ["כל התלמידים כתבו במחברת שלהם","כָּל הַתַּלְמִידִים כָּתְבוּ בַּמַּחְבֶּרֶת שֶׁלָּהֶם"],["בלילה אפשר לראות כוכבים בשמיים","בַּלַּיְלָה אֶפְשָׁר לִרְאוֹת כּוֹכָבִים בַּשָּׁמַיִם"],
+  ["הארנב הלבן קפץ מעל הגדר","הָאַרְנָב הַלָּבָן קָפַץ מֵעַל הַגָּדֵר"],["אני מצחצחת שיניים לפני השינה","אֲנִי מְצַחְצַחַת שִׁנַּיִם לִפְנֵי הַשֵּׁנָה"],
+  ["הפרה נותנת לנו חלב טרי","הַפָּרָה נוֹתֶנֶת לָנוּ חָלָב טָרִי"],["ביום שישי אנחנו אוכלים חלה","בְּיוֹם שִׁשִּׁי אֲנַחְנוּ אוֹכְלִים חַלָּה"],
+  ["הספרייה של בית הספר גדולה","הַסִּפְרִיָּה שֶׁל בֵּית הַסֵּפֶר גְּדוֹלָה"],["השוטר עוזר לילדים לחצות כביש","הַשּׁוֹטֵר עוֹזֵר לַיְלָדִים לַחֲצוֹת כְּבִישׁ"],
+  ["הקוף טיפס על העץ הגבוה","הַקּוֹף טִפֵּס עַל הָעֵץ הַגָּבוֹהַּ"],["אחותי הקטנה למדה ללכת היום","אֲחוֹתִי הַקְּטַנָּה לָמְדָה לָלֶכֶת הַיּוֹם"],
+  ["במסיבה היו בלונים ועוגה גדולה","בַּמְּסִבָּה הָיוּ בָּלוֹנִים וְעוּגָה גְּדוֹלָה"],["הרופא בדק את הגרון שלי","הָרוֹפֵא בָּדַק אֶת הַגָּרוֹן שֶׁלִּי"]
+ ]
+};
+
+const $ = id => document.getElementById(id);
+const page=$("page"), startBtn=$("startBtn"), goodBtn=$("goodBtn"), badBtn=$("badBtn"), peekBtn=$("peekBtn");
+const durIn=$("dur"), durOut=$("durOut");
+let mode="words", deck=[], round=0, total=10, good=0, streak=0, cur=null, curText="", curDur=3, results=[], busy=false, timers=[];
+
+function radio(name){return document.querySelector(`input[name="${name}"]:checked`).value}
+function save(){try{localStorage.setItem("flashSettings",JSON.stringify({m:radio("mode"),n:radio("nikud"),d:durIn.value,l:radio("lvl"),c:radio("cnt"),s:$("speedup").checked}))}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem("flashSettings")||"null");if(!s)return;
+  const set=(n,v)=>{const el=document.querySelector(`input[name="${n}"][value="${v}"]`);if(el)el.checked=true};
+  set("mode",s.m);set("nikud",s.n);set("lvl",s.l);set("cnt",s.c);if(s.d)durIn.value=s.d;$("speedup").checked=!!s.s;}catch(e){}}
+function showDur(){durOut.textContent=Number(durIn.value).toFixed(1)+" שנ׳"}
+function syncMode(){const w=radio("mode")==="words";$("lvlRow").hidden=!w;$("sLabel").textContent=w?"מילה":"משפט";}
+load();showDur();syncMode();
+durIn.addEventListener("input",()=>{showDur();save()});
+document.querySelectorAll(".settings input").forEach(el=>el.addEventListener("change",()=>{save();syncMode();}));
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function buildDeck(){
+  if(mode!=="words") return shuffle([...SENTENCES[mode]]);
+  const l=radio("lvl");
+  const pool = l==="all" ? [...WORDS.easy,...WORDS.mid,...WORDS.hard] : [...WORDS[l]];
+  return shuffle(pool);
+}
+function updateStats(){$("sRound").textContent=round;$("sTotal").textContent=total;$("sGood").textContent=good;$("sStreak").textContent=streak}
+function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+function setButtons(mode){
+  startBtn.hidden = mode!=="start";
+  goodBtn.hidden = badBtn.hidden = peekBtn.hidden = mode!=="judge";
+}
+
+function startRound(){
+  mode=radio("mode"); total=Number(radio("cnt")); round=0; good=0; streak=0; results=[];
+  curDur=Number(durIn.value); deck=buildDeck();
+  $("settingsBox").open=false;
+  updateStats(); nextWord();
+}
+
+function nextWord(){
+  if(round>=total){return finish()}
+  if(deck.length===0) deck=buildDeck();
+  cur=deck.pop(); round++; updateStats();
+  const n=radio("nikud");
+  const withN = n==="with" || (n==="mix" && Math.random()<.5);
+  curText = withN ? cur[1] : cur[0];
+  busy=true; setButtons("none");
+  page.innerHTML='<div class="dot" aria-label="מתכוננים"></div>';
+  timers.push(setTimeout(()=>{
+    page.innerHTML=`<div class="word${mode==="words"?"":" sentence"}">${curText}</div><div class="timer" id="bar"></div>`;
+    const bar=$("bar");
+    if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
+      bar.animate([{transform:"scaleX(1)"},{transform:"scaleX(0)"}],{duration:curDur*1000,fill:"forwards",easing:"linear"});
+    }
+    timers.push(setTimeout(()=>{
+      page.innerHTML=`<div class="big-q" aria-hidden="true">?</div><div class="msg">${mode==="words"?"איזו מילה הייתה?":"מה היה כתוב?"}</div>`;
+      busy=false; setButtons("judge"); goodBtn.focus();
+    },curDur*1000));
+  },900));
+}
+
+function judge(ok){
+  if(busy)return;
+  results.push({w:curText,ok});
+  if(ok){good++;streak++; if($("speedup").checked) curDur=Math.max(0.3,+(curDur*0.9).toFixed(2));}
+  else streak=0;
+  updateStats(); nextWord();
+}
+function peek(){
+  page.innerHTML=`<div class="word hint${mode==="words"?"":" sentence"}">${curText}</div><div class="msg">איך הלך?</div>`;
+}
+function finish(){
+  setButtons("start"); startBtn.textContent="עוד סבב";
+  const pct=Math.round(good/total*100);
+  const cheer = pct===100?(mode==="words"?"מושלם! כל המילים!":"מושלם! כל המשפטים!"): pct>=80?"כל הכבוד, נטע!": pct>=50?"יופי! ממשיכים להתאמן":"מתחילים טוב – בסבב הבא אפשר להאריך קצת את הזמן";
+  const list=results.map(r=>`<span class="${r.ok?"ok":"no"}">${r.w}</span>`).join("");
+  const speedNote = $("speedup").checked ? `<div class="msg" style="font-size:18px">הזמן הגיע עד ${curDur.toFixed(1)} שנ׳</div>` : "";
+  page.innerHTML=`<div class="msg" style="color:var(--ink);font-size:30px">${cheer}</div>
+    <div class="msg">${good} מתוך ${total} ${mode==="words"?"מילים":"משפטים"}</div>${speedNote}<div class="summary-list">${list}</div>`;
+  startBtn.focus();
+}
+
+startBtn.addEventListener("click",()=>{clearTimers();startRound()});
+goodBtn.addEventListener("click",()=>judge(true));
+badBtn.addEventListener("click",()=>judge(false));
+peekBtn.addEventListener("click",peek);
+document.addEventListener("keydown",e=>{
+  if(goodBtn.hidden) return;
+  if(e.key==="ArrowRight"||e.key==="1"){e.preventDefault();judge(true)}
+  else if(e.key==="ArrowLeft"||e.key==="2"){e.preventDefault();judge(false)}
+});
+</script>
+</body>
+</html>
